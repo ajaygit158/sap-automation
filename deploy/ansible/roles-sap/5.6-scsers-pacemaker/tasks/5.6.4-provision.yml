@@ -24,17 +24,20 @@
   include_tasks:                       "5.6.4.0-cluster-{{ ansible_os_family }}.yml"
   when:                                (not scs_installed.stat.exists) or (not ers_installed.stat.exists)
 
-- name:                                "Post ERS Install: check if installed"
-  delegate_to:                         "{{ secondary_instance_ip }}"
-  ansible.builtin.stat:
-    path:                              /etc/sap_deployment_automation/sap_deployment_ers.txt
-  register:                            post_ers_install
-
 - name:                                "Post SCS HA Install: check if installed"
+  become:                              true
   delegate_to:                         "{{ primary_instance_ip }}"
   ansible.builtin.stat:
     path:                              /etc/sap_deployment_automation/sap_deployment_scs.txt
   register:                            post_scs_install
+  when: inventory_hostname == secondary_instance_name
+
+- name:                                "Post ERS Install: check if installed"
+  become:                              true
+  ansible.builtin.stat:
+    path:                              /etc/sap_deployment_automation/sap_deployment_ers.txt
+  register:                            post_ers_install
+  when: inventory_hostname == secondary_instance_name
 
 - name:                                "5.6 SCSERS - profile"
   include_tasks:                       "5.6.4.1-scsersprofile.yaml"
